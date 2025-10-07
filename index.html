@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Tools Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🤖 AI Tools Hub</h1>
+    <button id="themeToggle">🌙 Dark</button>
+  </header>
+
+  <main>
+    <div class="tools-grid">
+      <div class="tool" onclick="openTool('https://chat.openai.com')">
+        <img src="https://www.logo.wine/a/logo/ChatGPT/ChatGPT-Logo.wine.svg" alt="ChatGPT">
+        <p>ChatGPT</p>
+      </div>
+
+      <div class="tool" onclick="openTool('https://claude.ai')">
+        <img src="https://seeklogo.com/images/A/anthropic-claude-logo-A0565D9F19-seeklogo.com.png" alt="Claude AI">
+        <p>Claude</p>
+      </div>
+
+      <div class="tool" onclick="openTool('https://gemini.google.com')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Google_Gemini_logo.svg" alt="Gemini">
+        <p>Gemini</p>
+      </div>
+
+      <div class="tool" onclick="openTool('https://copilot.microsoft.com')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_Copilot_logo.svg" alt="Copilot">
+        <p>Copilot</p>
+      </div>
+
+      <div class="tool" onclick="openTool('https://perplexity.ai')">
+        <img src="https://seeklogo.com/images/P/perplexity-ai-logo-5C76AEBE77-seeklogo.com.png" alt="Perplexity">
+        <p>Perplexity</p>
+      </div>
+
+      <div class="tool" onclick="openTool('https://poe.com')">
+        <img src="https://static.poe.com/logos/poe_logo_square.png" alt="Poe">
+        <p>Poe</p>
+      </div>
+    </div>
+
+    <iframe id="toolFrame" src="" frameborder="0"></iframe>
+  </main>
+
+  <footer>
+    <p>Made with ❤️ by Wai Yan | Hosted on GitHub Pages</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

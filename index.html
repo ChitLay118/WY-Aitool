@@ -1,57 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Tools Hub</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>မြန်မာ ရာသီဥတု အက်ပ်</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-  <header>
-    <h1>🤖 AI Tools Hub</h1>
-    <button id="themeToggle">🌙 Dark</button>
-  </header>
 
-  <main>
-    <div class="tools-grid">
-      <div class="tool" onclick="openTool('https://chat.openai.com')">
-        <img src="https://www.logo.wine/a/logo/ChatGPT/ChatGPT-Logo.wine.svg" alt="ChatGPT">
-        <p>ChatGPT</p>
-      </div>
+    <div class="weather-app">
+        <h1>ရာသီဥတု ခန့်မှန်းချက်</h1>
 
-      <div class="tool" onclick="openTool('https://claude.ai')">
-        <img src="https://seeklogo.com/images/A/anthropic-claude-logo-A0565D9F19-seeklogo.com.png" alt="Claude AI">
-        <p>Claude</p>
-      </div>
+        <div class="search-box">
+            <input type="text" id="city-input" placeholder="မြို့အမည် ရိုက်ထည့်ပါ (ဥပမာ- Yangon)" spellcheck="false">
+            <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
 
-      <div class="tool" onclick="openTool('https://gemini.google.com')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Google_Gemini_logo.svg" alt="Gemini">
-        <p>Gemini</p>
-      </div>
+        <p id="error-msg" class="error-msg" style="display: none;">ထိုမြို့ကို ရှာမတွေ့ပါ၊ မြို့အမည်အား ပြန်စစ်ဆေးပါ။</p>
 
-      <div class="tool" onclick="openTool('https://copilot.microsoft.com')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_Copilot_logo.svg" alt="Copilot">
-        <p>Copilot</p>
-      </div>
+        <div class="weather-data" style="display: none;">
+            <img src="" alt="Weather Icon" id="weather-icon" class="weather-icon">
+            
+            <h2 id="city-name"></h2>
+            <p class="date-time" id="current-date-time"></p>
 
-      <div class="tool" onclick="openTool('https://perplexity.ai')">
-        <img src="https://seeklogo.com/images/P/perplexity-ai-logo-5C76AEBE77-seeklogo.com.png" alt="Perplexity">
-        <p>Perplexity</p>
-      </div>
+            <div class="main-temp-section">
+                <p class="temperature" id="temp-value">--°C</p>
+                <p class="description" id="weather-description">--</p>
+            </div>
+            
+            <div class="details">
+                <div class="col">
+                    <i class="fa-solid fa-water"></i>
+                    <div>
+                        <p id="humidity-value">--%</p>
+                        <p>စိုထိုင်းဆ</p>
+                    </div>
+                </div>
+                <div class="col">
+                    <i class="fa-solid fa-wind"></i>
+                    <div>
+                        <p id="wind-speed">-- km/h</p>
+                        <p>လေတိုက်နှုန်း</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-      <div class="tool" onclick="openTool('https://poe.com')">
-        <img src="https://static.poe.com/logos/poe_logo_square.png" alt="Poe">
-        <p>Poe</p>
-      </div>
     </div>
 
-    <iframe id="toolFrame" src="" frameborder="0"></iframe>
-  </main>
-
-  <footer>
-    <p>Made with ❤️ by Wai Yan | Hosted on GitHub Pages</p>
-  </footer>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

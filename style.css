@@ -1,107 +1,174 @@
-:root {
-  --bg-color: #0d1117;
-  --text-color: #f1f1f1;
-  --card-color: #161b22;
-  --border-color: #30363d;
-}
-
-body.light {
-  --bg-color: #f9f9f9;
-  --text-color: #111;
-  --card-color: #ffffff;
-  --border-color: #cccccc;
+/* Global Reset and Font */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  margin: 0;
-  padding: 0;
-  transition: background 0.3s, color 0.3s;
+    background: linear-gradient(135deg, #00feba, #5b548a); /* လှပသော နောက်ခံအရောင် */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 25px;
-  background-color: var(--card-color);
-  border-bottom: 1px solid var(--border-color);
+/* Main App Container */
+.weather-app {
+    background: rgba(255, 255, 255, 0.2); /* အကြည်ရောင်နောက်ခံ */
+    color: #fff;
+    padding: 40px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px); /* မှုန်ဝါးဝါး အကျိုးသက်ရောက်မှု */
+    text-align: center;
 }
 
-h1 {
-  margin: 0;
-  font-size: 1.6em;
+.weather-app h1 {
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    font-weight: 700;
 }
 
-#themeToggle {
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  color: var(--text-color);
-  font-size: 1em;
-  padding: 6px 12px;
-  cursor: pointer;
-  transition: all 0.2s;
+/* Search Box Styling */
+.search-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ebfffc;
+    border-radius: 30px;
+    padding: 5px;
+    margin-bottom: 30px;
 }
 
-#themeToggle:hover {
-  background-color: var(--border-color);
+.search-box input {
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #555;
+    padding: 10px 20px;
+    flex: 1;
+    font-size: 1rem;
 }
 
-.tools-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
-  padding: 30px;
+.search-box button {
+    border: 0;
+    outline: 0;
+    background: #467972; /* ခလုတ်အရောင် */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    transition: background 0.3s;
+    color: #fff;
 }
 
-.tool {
-  background: var(--card-color);
-  border-radius: 15px;
-  padding: 15px;
-  text-align: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-  border: 1px solid var(--border-color);
+.search-box button:hover {
+    background: #3a625d;
 }
 
-.tool:hover {
-  transform: scale(1.05);
+/* Error Message */
+.error-msg {
+    color: #ffcccc;
+    font-size: 0.9rem;
+    margin-top: -20px;
+    margin-bottom: 20px;
+    font-weight: 600;
 }
 
-.tool img {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
+
+/* Weather Display Styling */
+.weather-data {
+    transition: all 0.5s ease;
 }
 
-.tool p {
-  margin-top: 10px;
-  font-weight: 500;
+.weather-icon {
+    width: 120px;
+    margin-top: 20px;
 }
 
-iframe {
-  width: 100%;
-  height: 90vh;
-  border: none;
-  display: none;
+#city-name {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-top: 5px;
 }
 
-footer {
-  text-align: center;
-  padding: 10px;
-  background: var(--card-color);
-  border-top: 1px solid var(--border-color);
+.date-time {
+    font-size: 0.9rem;
+    font-weight: 300;
+    margin-bottom: 15px;
 }
 
-@media (max-width: 600px) {
-  h1 {
-    font-size: 1.3em;
-  }
-  #themeToggle {
-    font-size: 0.9em;
-    padding: 5px 10px;
-  }
+.main-temp-section {
+    margin: 20px 0;
+}
+
+.temperature {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.description {
+    font-size: 1.2rem;
+    font-weight: 400;
+    text-transform: capitalize;
+    margin-top: 5px;
+}
+
+/* Details Section (Humidity & Wind) */
+.details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    margin-top: 40px;
+}
+
+.col {
+    display: flex;
+    align-items: center;
+    text-align: left;
+}
+
+.col i {
+    font-size: 2.5rem;
+    margin-right: 15px;
+}
+
+.col p:first-child {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.col p:last-child {
+    font-size: 0.8rem;
+    font-weight: 300;
+    opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .weather-app {
+        padding: 25px;
+    }
+    .temperature {
+        font-size: 3rem;
+    }
+    #city-name {
+        font-size: 2rem;
+    }
+    .details {
+        flex-direction: column;
+        gap: 20px;
+        padding: 0;
+    }
+    .col {
+        width: 100%;
+        justify-content: center;
+    }
 }

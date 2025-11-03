@@ -1,174 +1,46 @@
-/* Global Reset and Font */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
-
 body {
-    background: linear-gradient(135deg, #00feba, #5b548a); /* လှပသော နောက်ခံအရောင် */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
+  font-family: 'Noto Sans Myanmar', sans-serif;
+  text-align: center;
+  background: linear-gradient(#87CEFA, #fff);
+  overflow: hidden;
 }
 
-/* Main App Container */
-.weather-app {
-    background: rgba(255, 255, 255, 0.2); /* အကြည်ရောင်နောက်ခံ */
-    color: #fff;
-    padding: 40px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 450px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px); /* မှုန်ဝါးဝါး အကျိုးသက်ရောက်မှု */
-    text-align: center;
+#gameArea {
+  margin: 20px auto;
+  position: relative;
+  width: 320px;
+  height: 500px;
+  background: #444;
+  border: 4px solid #000;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.weather-app h1 {
-    font-size: 1.8rem;
-    margin-bottom: 25px;
-    font-weight: 700;
+#bus {
+  position: absolute;
+  bottom: 20px;
+  left: 140px;
+  width: 40px;
+  height: 70px;
+  background: red;
+  border-radius: 5px;
 }
 
-/* Search Box Styling */
-.search-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ebfffc;
-    border-radius: 30px;
-    padding: 5px;
-    margin-bottom: 30px;
+#roadLine {
+  position: absolute;
+  width: 4px;
+  height: 100%;
+  background: white;
+  left: 158px;
+  animation: moveLine 0.5s linear infinite;
 }
 
-.search-box input {
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: #555;
-    padding: 10px 20px;
-    flex: 1;
-    font-size: 1rem;
+@keyframes moveLine {
+  0% { top: -100%; }
+  100% { top: 100%; }
 }
 
-.search-box button {
-    border: 0;
-    outline: 0;
-    background: #467972; /* ခလုတ်အရောင် */
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    transition: background 0.3s;
-    color: #fff;
-}
-
-.search-box button:hover {
-    background: #3a625d;
-}
-
-/* Error Message */
-.error-msg {
-    color: #ffcccc;
-    font-size: 0.9rem;
-    margin-top: -20px;
-    margin-bottom: 20px;
-    font-weight: 600;
-}
-
-
-/* Weather Display Styling */
-.weather-data {
-    transition: all 0.5s ease;
-}
-
-.weather-icon {
-    width: 120px;
-    margin-top: 20px;
-}
-
-#city-name {
-    font-size: 2.5rem;
-    font-weight: 600;
-    margin-top: 5px;
-}
-
-.date-time {
-    font-size: 0.9rem;
-    font-weight: 300;
-    margin-bottom: 15px;
-}
-
-.main-temp-section {
-    margin: 20px 0;
-}
-
-.temperature {
-    font-size: 4rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.description {
-    font-size: 1.2rem;
-    font-weight: 400;
-    text-transform: capitalize;
-    margin-top: 5px;
-}
-
-/* Details Section (Humidity & Wind) */
-.details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    margin-top: 40px;
-}
-
-.col {
-    display: flex;
-    align-items: center;
-    text-align: left;
-}
-
-.col i {
-    font-size: 2.5rem;
-    margin-right: 15px;
-}
-
-.col p:first-child {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.col p:last-child {
-    font-size: 0.8rem;
-    font-weight: 300;
-    opacity: 0.8;
-}
-
-/* Responsive Design */
-@media (max-width: 480px) {
-    .weather-app {
-        padding: 25px;
-    }
-    .temperature {
-        font-size: 3rem;
-    }
-    #city-name {
-        font-size: 2rem;
-    }
-    .details {
-        flex-direction: column;
-        gap: 20px;
-        padding: 0;
-    }
-    .col {
-        width: 100%;
-        justify-content: center;
-    }
+.controls {
+  margin-top: 10px;
+  font-size: 14px;
 }

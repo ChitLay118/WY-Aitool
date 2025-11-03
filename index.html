@@ -1,56 +1,23 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>မြန်မာ ရာသီဥတု အက်ပ်</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bus Simulator Myanmar</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <h2>🚌 Bus Simulator Myanmar</h2>
 
-    <div class="weather-app">
-        <h1>ရာသီဥတု ခန့်မှန်းချက်</h1>
+  <div id="gameArea">
+    <div id="bus"></div>
+    <div id="roadLine"></div>
+  </div>
 
-        <div class="search-box">
-            <input type="text" id="city-input" placeholder="မြို့အမည် ရိုက်ထည့်ပါ (ဥပမာ- Yangon)" spellcheck="false">
-            <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
-        </div>
+  <div class="controls">
+    <p>🕹 ထိန်းရန် - Keyboard arrows (⬆⬇⬅➡)</p>
+  </div>
 
-        <p id="error-msg" class="error-msg" style="display: none;">ထိုမြို့ကို ရှာမတွေ့ပါ၊ မြို့အမည်အား ပြန်စစ်ဆေးပါ။</p>
-
-        <div class="weather-data" style="display: none;">
-            <img src="" alt="Weather Icon" id="weather-icon" class="weather-icon">
-            
-            <h2 id="city-name"></h2>
-            <p class="date-time" id="current-date-time"></p>
-
-            <div class="main-temp-section">
-                <p class="temperature" id="temp-value">--°C</p>
-                <p class="description" id="weather-description">--</p>
-            </div>
-            
-            <div class="details">
-                <div class="col">
-                    <i class="fa-solid fa-water"></i>
-                    <div>
-                        <p id="humidity-value">--%</p>
-                        <p>စိုထိုင်းဆ</p>
-                    </div>
-                </div>
-                <div class="col">
-                    <i class="fa-solid fa-wind"></i>
-                    <div>
-                        <p id="wind-speed">-- km/h</p>
-                        <p>လေတိုက်နှုန်း</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

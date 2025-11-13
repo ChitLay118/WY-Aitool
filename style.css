@@ -1,6 +1,23 @@
-/* Custom CSS styles if needed, mainly for non-tailwind things or specific overrides */
+/* Custom CSS styles for WY MovieBox App (v4.5) */
 
-/* Hide scrollbar for category menu but allow scrolling */
+/* Tailwind Configuration Override (if needed, but usually done in a build process) */
+
+/* Custom Color Variables for Dark Theme */
+:root {
+    --primary: #FF4D4D; /* Bright Red/Pink */
+    --darkbg: #121212;  /* Dark Background */
+    --midbg: #1E1E1E;   /* Card/Modal Background */
+}
+
+/* Base Styles */
+.bg-darkbg { background-color: var(--darkbg); }
+.bg-midbg { background-color: var(--midbg); }
+.text-primary { color: var(--primary); }
+.bg-primary { background-color: var(--primary); }
+.focus\:ring-primary:focus { --tw-ring-color: var(--primary); }
+.focus\:border-primary:focus { border-color: var(--primary); }
+
+/* Custom Scrollbar Hide for Category Menu */
 #menu-bar::-webkit-scrollbar {
     display: none;
 }
@@ -9,50 +26,40 @@
     scrollbar-width: none;  /* Firefox */
 }
 
-/* Base Dark Theme (Default) */
-.bg-darkbg {
-    background-color: #1A1A1A; 
-}
-.bg-midbg {
-    background-color: #262626; 
-}
-.text-primary {
-    color: #FFD700; 
+/* Nav Button Active State */
+.nav-btn.text-primary {
+    background-color: #3f0e0e; /* Darker red for active state */
+    border-radius: 9999px; /* Pill shape */
 }
 
-/* !!! FIX: Active Category Button - Blue Color */
-.active-category-blue {
-    background-color: #3B82F6 !important; /* Tailwind blue-500 */
-    color: white !important;
+/* Fullscreen Mode Class (Fix for true fullscreen on rotation) */
+.fullscreen-mode {
+    position: fixed !important; 
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important; 
+    height: 100vh !important; 
+    max-width: none !important; 
+    margin: 0 !important; 
+    border-radius: 0 !important; 
+    z-index: 9999 !important; 
 }
 
-/* Light Theme Classes (unchanged, but adjusted for new blue color if needed) */
-.light-mode .bg-darkbg {
-    background-color: #F8F8F8; 
+/* iframe inside fullscreen container should fill it */
+.fullscreen-mode #iframePlayer {
+    width: 100%;
+    height: 100%;
 }
-.light-mode .bg-midbg {
-    background-color: #FFFFFF; 
+
+/* Hide body content until login status is determined */
+.hidden-body {
+    visibility: hidden;
+    height: 100vh;
+    overflow: hidden;
 }
-.light-mode .text-white {
-    color: #1A1A1A; 
-}
-.light-mode .text-primary {
-    color: #CC9900; 
-}
-.light-mode .bg-gray-800 {
-    background-color: #E5E5E5 !important; 
-    color: #1A1A1A !important;
-}
-.light-mode .bg-gray-800:hover {
-    background-color: #CCCCCC !important;
-}
-.light-mode .nav-btn.text-gray-400 {
-    color: #6B7280 !important;
-}
-.light-mode #header-sticky {
-    border-color: #E5E5E5;
-}
-.light-mode .active-category-blue {
-    background-color: #1D4ED8 !important; /* Darker blue for light theme */
-    color: white !important;
+
+#body-root:not(.hidden-body) {
+    visibility: visible;
+    height: auto;
+    overflow: auto;
 }

@@ -6,8 +6,9 @@
     <title data-i18n="title">WY MovieBox</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link rel="stylesheet" href="style.css?v=4.6"> 
-</head>
+    <link rel="stylesheet" href="style.css?v=5.0"> 
+    
+    </head>
 <body id="body-root" class="bg-darkbg text-white min-h-screen pb-20 transition-colors duration-300">
 
     <header id="header-sticky" class="sticky top-0 z-50 bg-darkbg p-4 border-b border-gray-700 shadow-xl">
@@ -77,35 +78,26 @@
         <div class="w-full max-w-sm p-8 bg-midbg rounded-xl shadow-2xl border border-gray-700">
             
             <h2 class="text-4xl font-extrabold text-primary mb-2" data-i18n="title">WY MovieBox</h2>
-            <p class="text-sm text-gray-400 mb-8" data-i18n="signInRequired">Please sign in with Google to proceed.</p>
+            <p class="text-sm text-gray-400 mb-8" data-i18n="signInRequired">Please sign in to proceed.</p>
             
-            <div class="space-y-4 mb-6">
-                <input type="text" id="dummy-username-input" placeholder="Username / Email" class="w-full bg-gray-700 border border-gray-600 focus:ring-primary focus:border-primary rounded-lg py-3 px-4 text-white placeholder-gray-400 transition duration-150">
-                <input type="password" id="dummy-password-input" placeholder="Password" class="w-full bg-gray-700 border border-gray-600 focus:ring-primary focus:border-primary rounded-lg py-3 px-4 text-white placeholder-gray-400 transition duration-150">
-            </div>
-            
-            <button id="dummy-login-btn" class="w-full bg-primary text-black font-semibold py-3 rounded-lg shadow-md mb-6 hover:bg-opacity-90 transition duration-200">
-                <span data-i18n="login">Log In</span>
-            </button>
-            
-            <div class="flex items-center mb-6">
-                <div class="flex-grow border-t border-gray-700"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
-                <div class="flex-grow border-t border-gray-700"></div>
-            </div>
-            
-            <button id="google-login-btn" class="w-full flex items-center justify-center bg-white text-black font-semibold py-3 px-6 rounded-lg shadow-xl hover:bg-gray-200 transition duration-200 space-x-3">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo-google.png" class="w-6 h-6" alt="Google Logo">
-                <span data-i18n="signInGoogle">Sign in with Google</span>
-            </button>
+            <form id="local-login-form">
+                <div class="space-y-4 mb-6">
+                    <input type="text" id="login-username-input" placeholder="Username" required minlength="3" class="w-full bg-gray-700 border border-gray-600 focus:ring-primary focus:border-primary rounded-lg py-3 px-4 text-white placeholder-gray-400 transition duration-150">
+                    <input type="password" id="login-password-input" placeholder="Password (Min 6 characters)" required minlength="6" class="w-full bg-gray-700 border border-gray-600 focus:ring-primary focus:border-primary rounded-lg py-3 px-4 text-white placeholder-gray-400 transition duration-150">
+                </div>
+                
+                <button type="submit" class="w-full bg-primary text-black font-semibold py-3 rounded-lg shadow-md mb-6 hover:bg-opacity-90 transition duration-200">
+                    <span data-i18n="login">Log In</span>
+                </button>
+            </form>
             
             <p class="text-xs text-gray-500 mt-6">
-                <span data-i18n="authNote">Authentication powered by Google Identity Services.</span>
+                <span data-i18n="authNote">Local Authentication is required.</span>
             </p>
         </div>
     </div>
     
-    <script type="module" src="script.js?v=4.6"></script>
+    <script src="script.js?v=5.0"></script>
 
 </body>
 </html>

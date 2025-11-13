@@ -1,23 +1,57 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bus Simulator Myanmar</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title data-i18n="title">WY MovieBox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <link rel="stylesheet" href="style.css?v=4.1"> 
 </head>
-<body>
-  <h2>🚌 Bus Simulator Myanmar</h2>
+<body id="body-root" class="bg-darkbg text-white min-h-screen pb-20 transition-colors duration-300">
 
-  <div id="gameArea">
-    <div id="bus"></div>
-    <div id="roadLine"></div>
-  </div>
+    <header id="header-sticky" class="sticky top-0 z-50 bg-darkbg p-4 border-b border-gray-700 shadow-xl">
+        <div class="max-w-4xl mx-auto flex justify-between items-center h-8">
+             <h1 class="text-3xl font-extrabold text-primary" data-i18n="title">WY MovieBox</h1> 
+             
+             <button id="logout-btn-header" onclick="logout()" class="text-sm text-red-400 hover:text-red-500 font-semibold hidden" data-i18n="signOut">Sign Out</button>
+        </div>
+        
+        <div id="menu-bar" class="max-w-4xl mx-auto mt-4 flex space-x-2 overflow-x-auto whitespace-nowrap py-1 pointer-events-none opacity-50 transition-opacity duration-300">
+             </div>
+    </header>
 
-  <div class="controls">
-    <p>🕹 ထိန်းရန် - Keyboard arrows (⬆⬇⬅➡)</p>
-  </div>
+    <main id="main-content" class="max-w-full mx-auto px-4 min-h-[calc(100vh-160px)] flex flex-col">
 
-  <script src="script.js"></script>
+        <div id="player-container" class="w-full max-w-3xl mx-auto rounded-xl overflow-hidden relative shadow-2xl shadow-primary/30 bg-black mt-4 mb-6 aspect-video sticky top-[135px] z-40">
+            </div>
+        
+        <div class="max-w-3xl mx-auto flex justify-between items-center mt-0 mb-6 px-2 w-full z-30">
+            <p id="current-movie-title" class="text-xl font-semibold text-white/90" data-i18n="selectMovie">ရုပ်ရှင်ကို ရွေးချယ်ပါ</p>
+            
+            <button id="favorite-btn" onclick="toggleFavorite()" class="p-3 rounded-full transition duration-300 shadow-lg text-gray-500 hover:text-red-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+        </div>
+
+        </main>
+
+    <div id="login-modal" class="fixed inset-0 bg-darkbg z-[100] flex flex-col items-center justify-center p-6 text-white text-center">
+        <h2 class="text-4xl font-extrabold text-primary mb-4" data-i18n="title">WY MovieBox</h2>
+        <p class="text-lg text-gray-400 mb-8" data-i18n="signInRequired">Please sign in with your authorized account to proceed.</p>
+        
+        <button id="google-login-btn" class="flex items-center justify-center bg-white text-black font-semibold py-3 px-6 rounded-lg shadow-xl hover:bg-gray-200 transition duration-200 space-x-3">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo-google.png" class="w-6 h-6" alt="Google Logo">
+            <span data-i18n="signInGoogle">Sign in with Google</span>
+        </button>
+        
+        </div>
+    
+    <script src="script.js?v=4.1"></script>
+
 </body>
 </html>

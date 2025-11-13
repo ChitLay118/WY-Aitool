@@ -1,9 +1,9 @@
 /**
- * WY MovieBox - Main JavaScript Logic (v4.5 - Full Modular Firebase Implementation)
+ * WY MovieBox - Main JavaScript Logic (v4.6 - Final Login Fix and Modular)
  * * Key features:
- * - Uses Modular Firebase SDK (v9+)
+ * - Fixed Login UI flashing/disappearing issue.
  * - Both "Log In" button and "Sign in with Google" button initiate Google Auth.
- * - Login Only, Direct Entry, Fullscreen Fix, Multi-Source support remain.
+ * - Modular Firebase Implementation, Direct Entry, Fullscreen Fix, Multi-Source support remain.
  */
 
 // -------------------------------------------------------------------------
@@ -69,14 +69,8 @@ async function loadDataFromJSON() {
     } catch (error) {
         console.error("Error loading JSON data:", error);
         showCustomAlert("Data Error", "ရုပ်ရှင်ဒေတာများ တင်ရာတွင် အခက်အခဲရှိပါသည်။");
-        // Fallback to empty state
-        videos = {
-            trending: [],
-            movies: []
-        };
-        translations = {
-             myanmar: { title: "Error", selectMovie: "Data Error", /* ... */ }
-        };
+        videos = { trending: [], movies: [] };
+        translations = { myanmar: { title: "Error", selectMovie: "Data Error", /* ... */ } };
     }
 }
 
@@ -112,6 +106,7 @@ function enableButtons() {
 
 /**
  * Loads user state and initializes the app based on login status.
+ * (Modified logic to ensure stable Login UI display)
  */
 window.initializeApp = async function() {
     
@@ -120,24 +115,31 @@ window.initializeApp = async function() {
     generateVideoIds(); 
 
     // 2. Setup Login Listener
+    const loginModal = document.getElementById('login-modal');
+    const rootBody = document.getElementById('body-root');
+    const headerLogoutBtn = document.getElementById('logout-btn-header');
+    
+    // Ensure body content is hidden initially while checking auth state
+    // This prevents the main app content from flashing before the login modal appears.
+    rootBody.classList.add('hidden-body');
+
     onAuthStateChanged(auth, async (user) => {
-        const loginModal = document.getElementById('login-modal');
-        const rootBody = document.getElementById('body-root');
-        const headerLogoutBtn = document.getElementById('logout-btn-header');
 
         if (user) {
-            // User is signed in.
+            // ========================================
+            // A. User is signed in. SHOW MAIN APP.
+            // ========================================
             currentUser = user;
             
-            // Direct Entry to Main Screen
-            loginModal.classList.add('hidden');
-            rootBody.classList.remove('hidden-body');
-            headerLogoutBtn.classList.remove('hidden');
-
-            // 3. Load User Data from Firestore
+            // Load User Data
             await loadUserDataFromFirestore(user.uid);
             
-            // 4. Apply Settings and Start UI
+            // Hide Login Modal & Show App Content
+            loginModal.classList.add('hidden');
+            rootBody.classList.remove('hidden-body'); // !!! Show App !!!
+            headerLogoutBtn.classList.remove('hidden');
+
+            // Start UI
             applySettings();
             enableButtons(); 
             const homeBtn = document.querySelector('.nav-btn[data-nav="home"]');
@@ -146,17 +148,19 @@ window.initializeApp = async function() {
             }
 
         } else {
-            // No user is signed in.
+            // ========================================
+            // B. No user is signed in. SHOW LOGIN MODAL.
+            // ========================================
             currentUser = null;
-            
-            // Show Login Modal and wait
-            loginModal.classList.remove('hidden');
-            rootBody.classList.add('hidden-body');
-            headerLogoutBtn.classList.add('hidden'); // Hide Logout button
             
             // Reset state
             favorites = [];
             currentSettings = { ...defaultSettings };
+
+            // Show Login Modal & Ensure Body is visible to display the Modal
+            loginModal.classList.remove('hidden');
+            rootBody.classList.remove('hidden-body'); // !!! Show body, which contains the modal !!!
+            headerLogoutBtn.classList.add('hidden');
         }
     });
 
@@ -168,7 +172,6 @@ window.initializeApp = async function() {
         googleLoginBtn.addEventListener('click', startGoogleLogin);
     }
     if (dummyLoginBtn) {
-        // Link dummy login button to start Google Auth process
         dummyLoginBtn.addEventListener('click', startGoogleLogin);
     }
 }
@@ -462,6 +465,7 @@ function displayProfileSettings() {
 // -------------------------------------------------------------------------
 // 6. HELPER AND VIDEO FUNCTIONS
 // -------------------------------------------------------------------------
+// ... (findMovieById, playVideo, toggleFullScreen, showCustomAlert, closeCustomAlert, openAdultWebview, closeAdultWebview functions are unchanged) ...
 
 function findMovieById(id) {
     for (const category in videos) {
@@ -471,9 +475,6 @@ function findMovieById(id) {
     return null;
 }
 
-/**
- * Plays a video in the iframe, handling YouTube, Archive.org, and MEGA links.
- */
 window.playVideo = function(movieId) {
     const movie = findMovieById(movieId);
     
@@ -486,11 +487,9 @@ window.playVideo = function(movieId) {
     const iframe = document.getElementById('iframePlayer');
     const movieSrc = movie.src;
 
-    // Reset iframe attributes first
     iframe.removeAttribute('allow');
     
     if (movieSrc.includes('youtube.com') || movieSrc.includes('youtu.be')) {
-        // 1. YouTube Link (Embed format)
         let embedSrc = movieSrc;
         if (!movieSrc.includes('autoplay')) {
              embedSrc = movieSrc.includes('?') ? `${movieSrc}&autoplay=1` : `${movieSrc}?autoplay=1`;
@@ -500,15 +499,12 @@ window.playVideo = function(movieId) {
         iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
 
     } else if (movieSrc.includes('archive.org')) {
-        // 2. Archive.org Link
         iframe.src = movieSrc;
         
     } else if (movieSrc.includes('mega.nz')) {
-        // 3. MEGA.nz Link 
         iframe.src = movieSrc;
         
     } else {
-        // Fallback for other direct video/embed links
         iframe.src = movieSrc;
     }
 
@@ -516,10 +512,6 @@ window.playVideo = function(movieId) {
     updateFavoriteButtonState(movieId);
 }
 
-
-/**
- * Toggles the custom fullscreen mode for the player container.
- */
 window.toggleFullScreen = function() {
     const playerContainer = document.getElementById('player-container');
     const iframe = document.getElementById('iframePlayer');
@@ -532,43 +524,32 @@ window.toggleFullScreen = function() {
     const isInFullScreen = playerContainer.classList.toggle('fullscreen-mode');
 
     if (isInFullScreen) {
-        // Enter Fullscreen Mode (Apply CSS Class)
         document.body.style.overflow = 'hidden'; 
-        
-        // Hide other elements
         mainContent.classList.add('hidden');
         header.classList.add('hidden');
         navBar.classList.add('hidden');
         
-        // Toggle Icons
         openIcon.classList.add('hidden');
         closeIcon.classList.remove('hidden');
 
-        // Optional: Trigger browser fullscreen for the iframe itself (best practice for video)
         if (iframe.requestFullscreen) {
             iframe.requestFullscreen().catch(e => console.log("Browser fullscreen failed:", e));
         }
 
     } else {
-        // Exit Fullscreen Mode (Remove CSS Class)
         document.body.style.overflow = ''; 
-        
-        // Show other elements
         mainContent.classList.remove('hidden');
         header.classList.remove('hidden');
         navBar.classList.remove('hidden');
         
-        // Toggle Icons
         openIcon.classList.remove('hidden');
         closeIcon.classList.add('hidden');
 
-        // Optional: Exit browser fullscreen if active
         if (document.fullscreenElement) {
             document.exitFullscreen();
         }
     }
 }
-
 
 window.showCustomAlert = function(title, message) {
     document.getElementById('alert-title').textContent = title;
@@ -597,6 +578,6 @@ window.closeAdultWebview = function() {
 
 // Initial application load 
 window.addEventListener('DOMContentLoaded', () => {
-    document.body.classList.add('hidden-body');
+    // Ensures initial load waits for initializeApp to resolve authentication state
     initializeApp();
-});
+ere

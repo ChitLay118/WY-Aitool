@@ -6,19 +6,106 @@
     <title data-i18n="title">WY MovieBox</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link rel="stylesheet" href="style.css?v=4.2"> 
+    <link rel="stylesheet" href="style.css?v=4.5"> 
 </head>
 <body id="body-root" class="bg-darkbg text-white min-h-screen pb-20 transition-colors duration-300">
 
-    <div id="login-modal" class="fixed inset-0 bg-darkbg z-[100] flex flex-col items-center justify-center p-6 text-white text-center">
-        <button id="google-login-btn" class="flex items-center justify-center bg-white text-black font-semibold py-3 px-6 rounded-lg shadow-xl hover:bg-gray-200 transition duration-200 space-x-3">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo-google.png" class="w-6 h-6" alt="Google Logo">
-            <span data-i18n="signInGoogle">Sign in with Google</span>
-        </button>
+    <header id="header-sticky" class="sticky top-0 z-50 bg-darkbg p-4 border-b border-gray-700 shadow-xl">
+        <div class="max-w-4xl mx-auto flex justify-between items-center h-8">
+             <h1 class="text-3xl font-extrabold text-primary" data-i18n="title">WY MovieBox</h1> 
+             
+             <button id="logout-btn-header" onclick="logout()" class="text-sm text-red-400 hover:text-red-500 font-semibold hidden" data-i18n="signOut">Sign Out</button>
+        </div>
         
+        <div id="menu-bar" class="max-w-4xl mx-auto mt-4 flex space-x-2 overflow-x-auto whitespace-nowrap py-1">
+            </div>
+    </header>
+
+    <main id="main-content" class="max-w-full mx-auto px-4 min-h-[calc(100vh-160px)] flex flex-col">
+
+        <div id="player-container" class="w-full max-w-3xl mx-auto rounded-xl overflow-hidden relative shadow-2xl shadow-primary/30 bg-black mt-4 mb-6 aspect-video sticky top-[135px] z-40">
+            
+            <iframe id="iframePlayer" class="w-full h-full absolute top-0 left-0" 
+                    src="https://www.youtube.com/embed/YE7VzlLTP-4?autoplay=0" 
+                    frameborder="0" 
+                    allow="" 
+                    allowfullscreen>
+            </iframe>
+
+            <button onclick="toggleFullScreen()" id="fullscreen-button" class="absolute top-4 right-4 bg-black/50 hover:bg-black/70 p-2 rounded-full text-white transition duration-200 z-40">
+                <svg id="fullscreen-icon-open" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                <svg id="fullscreen-icon-close" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            </button>
+        </div>
+        
+        <div class="max-w-3xl mx-auto flex justify-between items-center mt-0 mb-6 px-2 w-full z-30">
+            <p id="current-movie-title" class="text-xl font-semibold text-white/90" data-i18n="selectMovie">ရုပ်ရှင်ကို ရွေးချယ်ပါ</p>
+            
+            <button id="favorite-btn" onclick="toggleFavorite()" class="p-3 rounded-full transition duration-300 shadow-lg text-gray-500 hover:text-red-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+        </div>
+
+        <section id="movies" class="w-full max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></section>
+        
+        <div id="custom-alert-modal" class="fixed inset-0 bg-black/50 z-[100] hidden items-center justify-center p-4">
+            <div class="bg-midbg p-6 rounded-lg shadow-xl max-w-sm w-full">
+                <h3 id="alert-title" class="text-xl font-bold text-primary mb-3"></h3>
+                <p id="alert-message" class="text-white/80 mb-4"></p>
+                <button onclick="closeCustomAlert()" class="w-full bg-primary text-black font-semibold py-2 rounded">OK</button>
+            </div>
+        </div>
+
+        <div id="adult-webview-modal" class="fixed inset-0 bg-darkbg z-[200] hidden flex-col">
+            <div class="flex justify-between items-center p-4 bg-black border-b border-gray-700">
+                <h2 class="text-xl font-bold text-red-500">18+ Content</h2>
+                <button onclick="closeAdultWebview()" class="text-white/70 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <iframe id="adult-webview-iframe" class="flex-grow w-full h-full" frameborder="0"></iframe>
+        </div>
+    </main>
+
+    <nav id="nav-bar" class="fixed bottom-0 left-0 right-0 z-50 bg-midbg border-t border-gray-700 shadow-t-lg">
+        <div class="max-w-4xl mx-auto h-16 flex justify-around">
+            </div>
+    </nav>
+    
+    <div id="login-modal" class="fixed inset-0 bg-darkbg z-[100] flex flex-col items-center justify-center p-6 text-white text-center">
+        
+        <div class="w-full max-w-sm p-8 bg-midbg rounded-xl shadow-2xl border border-gray-700">
+            
+            <h2 class="text-4xl font-extrabold text-primary mb-2" data-i18n="title">WY MovieBox</h2>
+            <p class="text-sm text-gray-400 mb-8" data-i18n="signInRequired">Please sign in with Google to proceed.</p>
+            
+            <div class="space-y-4 mb-6">
+                <input type="text" id="dummy-username-input" placeholder="Username / Email" class="w-full bg-gray-700 border border-gray-600 focus:ring-primary focus:border-primary rounded-lg py-3 px-4 text-white placeholder-gray-400 transition duration-150">
+                <input type="password" id="dummy-password-input" placeholder="Password" class="w-full bg-gray-700 border border-gray-600 focus:ring-primary focus:border-primary rounded-lg py-3 px-4 text-white placeholder-gray-400 transition duration-150">
+            </div>
+            
+            <button id="dummy-login-btn" class="w-full bg-primary text-black font-semibold py-3 rounded-lg shadow-md mb-6 hover:bg-opacity-90 transition duration-200">
+                <span data-i18n="login">Log In</span>
+            </button>
+            
+            <div class="flex items-center mb-6">
+                <div class="flex-grow border-t border-gray-700"></div>
+                <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+                <div class="flex-grow border-t border-gray-700"></div>
+            </div>
+            
+            <button id="google-login-btn" class="w-full flex items-center justify-center bg-white text-black font-semibold py-3 px-6 rounded-lg shadow-xl hover:bg-gray-200 transition duration-200 space-x-3">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo-google.png" class="w-6 h-6" alt="Google Logo">
+                <span data-i18n="signInGoogle">Sign in with Google</span>
+            </button>
+            
+            <p class="text-xs text-gray-500 mt-6">
+                <span data-i18n="authNote">Authentication powered by Google Identity Services.</span>
+            </p>
+        </div>
     </div>
     
-    <script type="module" src="script.js?v=4.2"></script>
+    <script type="module" src="script.js?v=4.5"></script>
 
 </body>
 </html>

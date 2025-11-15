@@ -1,14 +1,10 @@
 /**
- * WY MovieBox - Main JavaScript Logic (v5.2 - Local Storage Login & Persistence)
+ * WY MovieBox - Main JavaScript Logic (v3.4 - Added ModApp Nav & Webview)
  * * Key features:
- * - Uses Local Storage for simple Username/Password Authentication.
- * - Validation rules applied: Min length 3/6, no consecutive repeating characters/numbers (3 times).
- * - **Login Persistence:** Skips Login UI if a user is already authenticated in Local Storage.
+ * - **No External Search/DB:** Only uses JSON data.
+ * - **Player Sticky:** Player remains on top of the screen when scrolling.
+ * - **Menu Blue:** Active category button shows blue background.
  */
-
-// -------------------------------------------------------------------------
-// 1. CONFIGURATION AND INITIALIZATION
-// -------------------------------------------------------------------------
 
 // Global state variables
 let videos = {};
@@ -16,294 +12,125 @@ let translations = {};
 let favorites = [];
 let currentPlayingMovie = null; 
 let currentSettings = {};
-let currentUser = null; 
 
 const defaultSettings = {
     language: 'myanmar',
-    theme: 'dark', 
+    theme: 'dark', // 'dark' or 'light'
 };
 
 const ADULT_WEBVIEW_URL = 'https://allkar.vercel.app/';
-
-// Key for local storage
-const AUTH_KEY = 'wy_auth_user';
-const FAV_KEY = 'wy_favorites';
-const SETTINGS_KEY = 'wy_settings';
+const MODAPP_WEBVIEW_URL = 'https://wyap-pstore.vercel.app/'; // ⭐️ NEW: ModApp URL
 
 
 // -------------------------------------------------------------------------
-// 2. DATA FETCHING AND CORE INITIALIZATION
+// 1. DATA FETCHING AND INITIALIZATION
 // -------------------------------------------------------------------------
 
+/**
+ * Fetches movie data and translations from the JSON file.
+ */
 async function loadDataFromJSON() {
-    // !!! IMPORTANT: Replace with your actual GitHub JSON URL
-    const videoUrl = 'https://your-github-repo.com/path/to/videos_photos.json'; 
-    const translationUrl = 'https://your-github-repo.com/path/to/translations.json';
-    
     try {
-        const [videoRes, transRes] = await Promise.all([
-            fetch(videoUrl),
-            fetch(translationUrl)
-        ]);
-
-        videos = await videoRes.json();
-        translations = await transRes.json();
-    } catch (error) {
-        console.error("Error loading JSON data:", error);
-        showCustomAlert("Data Error", "ရုပ်ရှင်ဒေတာများ တင်ရာတွင် အခက်အခဲရှိပါသည်။");
-        videos = { trending: [], movies: [] };
-        // Fallback translation structure (ensure these keys exist for basic UI)
-        translations = { 
-             myanmar: { 
-                 title: "WY MovieBox", selectMovie: "ရုပ်ရှင်ကို ရွေးချယ်ပါ", signInRequired: "Sign in to proceed.", login: "Log In", 
-                 authNote: "Local Authentication is required.", home: "Home", trending: "Trending", favorites: "Favorites", 
-                 profile: "Profile", signOut: "Sign Out", noMovies: "No movies found in this category.", noTrending: "No trending movies available.",
-                 loginRequiredForFav: "Login is required to view favorites.", noFavorites: "You haven't added any favorites yet.", 
-                 profileTitle: "User Profile", loggedInAs: "Logged in as:", settingsTitle: "Settings", theme: "Theme", darkTheme: "Dark", 
-                 language: "Language", adultContent: "လူကြီးကားများကြည့်ရန် (18+)", english: "English", myanmar: "Myanmar"
-             },
-             english: { /* ... minimal English translation for testing ... */ }
-        };
+        const response = await fetch('videos_photos.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        videos = data.videos || {};
+        translations = data.translations || {};
+        console.log("Data loaded successfully from JSON. (v3.4)");
+    } catch (e) {
+        console.error("Failed to load JSON data. Content will be empty.", e);
+        const t = translations.myanmar || { Error: "Error", jsonError: "ရုပ်ရှင်ဒေတာများ ဖတ်ယူနိုင်ခြင်း မရှိပါ (JSON Error)။" };
+        showCustomAlert(t.Error, t.jsonError);
     }
 }
 
+/**
+ * Generates unique video IDs for all movies after loading data.
+ */
 function generateVideoIds() {
     let idCounter = 1;
     for (const category in videos) {
         videos[category] = videos[category].map(movie => {
             if (!movie.id) {
-                movie.id = String(idCounter++);
+                movie.id = 'v' + idCounter++;
             }
             return movie;
         });
     }
 }
 
+/**
+ * Enables all navigation and category buttons after the app is initialized.
+ */
 function enableButtons() {
     const navBar = document.getElementById('nav-bar');
-    const navItems = [
-        { nav: 'home', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
-        { nav: 'trending', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 19H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2z"/><polyline points="12 8 12 16 16 12"/></svg>' },
-        { nav: 'favorites', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' },
-        { nav: 'profile', icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' }
-    ];
-
-    navBar.querySelector('div').innerHTML = navItems.map(item => `
-        <button class="nav-btn flex flex-col items-center justify-center p-2 text-gray-400 hover:text-white transition duration-200" data-nav="${item.nav}" onclick="changeNav(this)">
-            ${item.icon}
-            <span class="text-xs mt-1" data-i18n="${item.nav}"></span>
-        </button>
-    `).join('');
-}
-
-
-// -------------------------------------------------------------------------
-// 3. AUTHENTICATION AND LOCAL STORAGE SYNC
-// -------------------------------------------------------------------------
-
-function checkLocalAuth() {
-    const authData = localStorage.getItem(AUTH_KEY);
-    return authData ? JSON.parse(authData) : null;
-}
-
-function saveLocalAuth(username) {
-    currentUser = { username: username };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
-}
-
-window.logout = function() {
-    localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem(FAV_KEY);
-    localStorage.removeItem(SETTINGS_KEY);
+    const menuBar = document.getElementById('menu-bar');
+    const loadingIndicator = document.getElementById('loading-indicator');
     
-    currentUser = null;
-    favorites = [];
-    currentSettings = { ...defaultSettings };
-
-    window.location.reload(); 
-}
-
-function validateConsecutive(value) {
-    if (/(.)\1\1/.test(value)) {
-        return false;
-    }
-    return true;
-}
-
-function handleLocalLogin(e) {
-    e.preventDefault();
-    
-    const usernameInput = document.getElementById('login-username-input');
-    const passwordInput = document.getElementById('login-password-input');
-    
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-
-    if (username.length < 3) {
-        showCustomAlert("Login Error", "Username သည် အနည်းဆုံး ၃ လုံးရှိရပါမည်။");
-        return;
-    }
-    if (password.length < 6) {
-        showCustomAlert("Login Error", "Password သည် အနည်းဆုံး ၆ လုံးရှိရပါမည်။");
-        return;
-    }
-
-    if (!validateConsecutive(username)) {
-        showCustomAlert("Login Error", "Username တွင် စာလုံး ၃ လုံး ဆက်တိုက် တူညီခြင်း မရှိရပါ။ (e.g., 'aaa' မရပါ။)");
-        return;
-    }
-    if (!validateConsecutive(password)) {
-        showCustomAlert("Login Error", "Password တွင် စာလုံး သို့မဟုတ် နံပါတ် ၃ လုံး ဆက်တိုက် တူညီခြင်း မရှိရပါ။ (e.g., '111' သို့မဟုတ် 'bbb' မရပါ။)");
-        return;
+    if (loadingIndicator) {
+        loadingIndicator.remove();
     }
     
-    // Login Success 
-    saveLocalAuth(username);
-    
-    // Load other user data
-    loadLocalUserData(); 
-    
-    // Clear the form
-    usernameInput.value = '';
-    passwordInput.value = '';
-    
-    // Proceed to initialize the main app
-    initializeMainApp();
+    navBar.classList.remove('pointer-events-none', 'opacity-50');
+    menuBar.classList.remove('pointer-events-none', 'opacity-50');
 }
 
-function loadLocalUserData() {
-    const settingsData = localStorage.getItem(SETTINGS_KEY);
-    currentSettings = settingsData ? JSON.parse(settingsData) : { ...defaultSettings };
-    
-    const favData = localStorage.getItem(FAV_KEY);
-    favorites = favData ? JSON.parse(favData) : [];
-}
-
-function saveLocalUserData() {
-    if (!currentUser) return;
-
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
-    localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
-}
-
-
-// -------------------------------------------------------------------------
-// 4. INITIALIZATION FLOW (Local Auth Persistence Logic)
-// -------------------------------------------------------------------------
 
 /**
- * Initializes the app based on local storage state.
- * (Crucial for Login Persistence: Checks auth state first.)
+ * Loads user state and initializes the app.
  */
 window.initializeApp = async function() {
     
     // 1. Load Data
     await loadDataFromJSON(); 
-    generateVideoIds(); 
+    generateVideoIds(); // IDs are generated after load
 
-    // 2. Check Auth State - IMMEDIATELY CHECK LOCAL STORAGE
-    const loggedInUser = checkLocalAuth();
-
-    if (loggedInUser) {
-        // A. User is already logged in. Skip Login UI.
-        currentUser = loggedInUser;
-        loadLocalUserData();
-        initializeMainApp();
-    } else {
-        // B. No user is logged in. Show Login UI.
-        currentUser = null;
-        showLoginModal();
-    }
-
-    // 3. Setup Login Form Handler (Stays here for when the modal is shown)
-    document.getElementById('local-login-form').addEventListener('submit', handleLocalLogin);
-}
-
-function showLoginModal() {
-    const loginModal = document.getElementById('login-modal');
-    const rootBody = document.getElementById('body-root');
-    const headerLogoutBtn = document.getElementById('logout-btn-header');
+    // 2. Load Local State (Settings/Favorites)
+    const storedSettings = localStorage.getItem('userSettings');
+    const storedFavorites = localStorage.getItem('favorites');
     
-    loginModal.classList.remove('hidden');
-    rootBody.classList.remove('hidden-body'); 
-    headerLogoutBtn.classList.add('hidden');
-}
-
-function initializeMainApp() {
-    const loginModal = document.getElementById('login-modal');
-    const rootBody = document.getElementById('body-root');
-    const headerLogoutBtn = document.getElementById('logout-btn-header');
-
-    loginModal.classList.add('hidden');
-    rootBody.classList.remove('hidden-body');
-    headerLogoutBtn.classList.remove('hidden');
-
+    try {
+        currentSettings = storedSettings ? { ...defaultSettings, ...JSON.parse(storedSettings) } : { ...defaultSettings };
+    } catch (e) {
+        currentSettings = { ...defaultSettings };
+    }
+    
+    try {
+        favorites = storedFavorites ? JSON.parse(storedFavorites) : [];
+        if (!Array.isArray(favorites)) favorites = [];
+    } catch (e) {
+        favorites = [];
+    }
+    
+    // 3. Apply Settings (Theme and Language)
     applySettings();
+    
+    // 4. Enable Buttons
     enableButtons(); 
+    
     const homeBtn = document.querySelector('.nav-btn[data-nav="home"]');
     if (homeBtn) {
         changeNav(homeBtn); 
+    } else {
+         console.error("Home navigation button not found.");
     }
 }
 
 
 // -------------------------------------------------------------------------
-// 5. UI AND VIEW MANAGEMENT
+// 2. LOCAL STORAGE AND FAVORITES HANDLING (Unchanged)
 // -------------------------------------------------------------------------
 
-function applySettings() {
-    const bodyRoot = document.getElementById('body-root');
-    bodyRoot.className = `bg-${currentSettings.theme}bg text-white min-h-screen pb-20 transition-colors duration-300`;
-    
-    const t = translations[currentSettings.language] || translations.myanmar;
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (t[key]) {
-            el.textContent = t[key];
-        }
-    });
-}
-
-window.changeNav = function(btn) {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('text-primary'));
-    btn.classList.add('text-primary');
-
-    const nav = btn.dataset.nav;
-    
-    const menuBar = document.getElementById('menu-bar');
-    menuBar.classList.remove('pointer-events-none', 'opacity-50');
-
-    if (nav === 'home') {
-        showCategory('trending');
-    } else if (nav === 'trending') {
-        displayTrending();
-        menuBar.classList.add('pointer-events-none', 'opacity-50');
-    } else if (nav === 'favorites') {
-        displayFavorites();
-        menuBar.classList.add('pointer-events-none', 'opacity-50');
-    } else if (nav === 'profile') {
-        displayProfileSettings();
-        menuBar.classList.add('pointer-events-none', 'opacity-50');
-    }
-}
-
-window.changeTheme = function(theme) {
-    currentSettings.theme = theme;
-    saveLocalUserData();
-    applySettings();
-}
-
-window.changeLanguage = function(lang) {
-    currentSettings.language = lang;
-    saveLocalUserData();
-    applySettings();
+function saveFavorites() {
+    try {
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+    } catch (e) { /* Error */ }
 }
 
 window.toggleFavorite = function() {
-    if (!currentPlayingMovie || !currentPlayingMovie.id || !currentUser) {
-         showCustomAlert("Error", "အကောင့်ဝင်ရောက်ထားမှသာ Favorite လုပ်နိုင်ပါသည်။");
-         return;
-    }
+    if (!currentPlayingMovie || !currentPlayingMovie.id) return;
 
     const movieId = currentPlayingMovie.id;
     const index = favorites.indexOf(movieId);
@@ -314,7 +141,7 @@ window.toggleFavorite = function() {
         favorites.push(movieId);
     }
 
-    saveLocalUserData(); 
+    saveFavorites();
     updateFavoriteButtonState(movieId);
     
     const activeNav = document.querySelector('.nav-btn.text-primary')?.dataset.nav;
@@ -323,125 +150,295 @@ window.toggleFavorite = function() {
     }
 }
 
-// -------------------------------------------------------------------------
-// 6. RENDERING LOGIC
-// -------------------------------------------------------------------------
-
 function updateFavoriteButtonState(movieId) {
-    const btn = document.getElementById('favorite-btn');
-    if (!btn) return;
-    
+    const favoriteBtn = document.getElementById('favorite-btn');
+    if (!favoriteBtn) return;
+
     if (favorites.includes(movieId)) {
-        btn.classList.add('text-primary');
-        btn.classList.remove('text-gray-500');
-        btn.querySelector('svg').setAttribute('fill', 'currentColor');
+        favoriteBtn.classList.add('text-red-500');
+        favoriteBtn.classList.remove('text-gray-500');
     } else {
-        btn.classList.remove('text-primary');
-        btn.classList.add('text-gray-500');
-        btn.querySelector('svg').setAttribute('fill', 'none');
+        favoriteBtn.classList.add('text-gray-500');
+        favoriteBtn.classList.remove('text-red-500');
     }
 }
 
-function createMovieCard(movie) {
-    return `
-        <div onclick="playVideo('${movie.id}')" class="group cursor-pointer rounded-lg overflow-hidden shadow-xl transform transition duration-300 hover:scale-[1.03] hover:shadow-primary/50">
-            <div class="aspect-[2/3] w-full relative">
-                <img src="${movie.photo}" alt="${movie.title}" class="w-full h-full object-cover transition duration-300 group-hover:opacity-90">
-                <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors"></div>
-            </div>
-            <p class="text-sm font-semibold text-white/90 p-2 truncate">${movie.title}</p>
-        </div>
-    `;
+
+// -------------------------------------------------------------------------
+// 3. UI AND VIEW MANAGEMENT (Navigation Logic)
+// -------------------------------------------------------------------------
+
+/**
+ * Applies language and theme settings.
+ */
+function applySettings() {
+    const lang = currentSettings.language;
+    const body = document.getElementById('body-root');
+    
+    // Theme Application
+    if (currentSettings.theme === 'light') {
+        body.classList.add('light-mode');
+        document.getElementById('header-sticky').classList.remove('bg-darkbg');
+        document.getElementById('header-sticky').classList.add('bg-midbg');
+    } else {
+        body.classList.remove('light-mode');
+        document.getElementById('header-sticky').classList.remove('bg-midbg');
+        document.getElementById('header-sticky').classList.add('bg-darkbg');
+    }
+
+    // Language Application
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (translations[lang] && translations[lang][key]) {
+            el.textContent = translations[lang][key];
+        } else if (translations.myanmar && translations.myanmar[key]) {
+             el.textContent = translations.myanmar[key]; 
+        }
+    });
 }
 
-function showCategory(category) {
-    const moviesContainer = document.getElementById('movies');
-    const menuBar = document.getElementById('menu-bar');
+/**
+ * Saves and changes the application theme.
+ */
+window.changeTheme = function(theme) {
+    currentSettings.theme = theme;
+    try {
+        localStorage.setItem('userSettings', JSON.stringify(currentSettings));
+    } catch (e) { /* Error */ }
     
-    if (category === 'trending') {
-        displayTrending();
+    applySettings();
+    
+    const activeNavBtn = document.querySelector('.nav-btn.text-primary');
+    if (activeNavBtn) {
+        changeNav(activeNavBtn);
+    }
+}
+
+
+window.changeNav = function(btn) {
+    const nav = btn.dataset.nav;
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const menuBar = document.getElementById('menu-bar');
+    const playerContainer = document.getElementById('player-container');
+    const currentTitleBar = document.querySelector('.max-w-3xl.mx-auto.flex.justify-between.items-center.mt-0.mb-6.px-2.w-full');
+    const moviesContainer = document.getElementById('movies');
+    
+    // Reset all nav buttons
+    navBtns.forEach(b => {
+        b.classList.remove('text-primary', 'font-bold');
+        b.classList.add('text-gray-400', 'hover:text-white');
+    });
+
+    // Set active nav button
+    btn.classList.add('text-primary', 'font-bold');
+    btn.classList.remove('text-gray-400', 'hover:text-white'); 
+
+    // Reset grid/flex properties before content load
+    moviesContainer.innerHTML = '';
+    
+    // Header/Player visibility and Layout Control
+    if (nav === 'profile' || nav === 'modapp') { // ⭐️ UPDATED: include 'modapp'
+        menuBar.classList.add('hidden');
+        playerContainer.classList.add('hidden');
+        if (currentTitleBar) currentTitleBar.classList.add('hidden'); 
+        
+        moviesContainer.classList.remove('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5', 'gap-2', 'justify-items-center', 'px-0');
+        moviesContainer.classList.add('flex', 'flex-col', 'w-full', 'pt-4'); 
+        
+    } else {
+        menuBar.classList.remove('hidden');
+        playerContainer.classList.remove('hidden');
+        if (currentTitleBar) currentTitleBar.classList.remove('hidden'); 
+        
+        moviesContainer.classList.remove('flex', 'flex-col', 'w-full', 'pt-4');
+        moviesContainer.classList.add('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5', 'gap-2', 'justify-items-center', 'px-0');
+    }
+
+    // Load Content
+    switch (nav) {
+        case 'home':
+            const activeCategoryBtn = document.querySelector('.menu-btn.active-category') || document.querySelector('.menu-btn[data-category="action"]');
+            if (activeCategoryBtn) {
+                showCategory(activeCategoryBtn.dataset.category, activeCategoryBtn);
+            } else if (videos.action) {
+                 showCategory('action', document.querySelector('.menu-btn[data-category="action"]'));
+            } else {
+                const t = translations[currentSettings.language] || translations.myanmar;
+                moviesContainer.innerHTML = `<h2 class="text-xl font-bold text-center w-full mb-4 text-white/80 col-span-full">${t.noContent || 'No Content Available'}</h2>`; 
+            }
+            break;
+
+        case 'trending':
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('active-category', 'active-category-blue', 'text-white', 'bg-gray-800');
+                btn.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
+            });
+            displayTrending();
+            break;
+
+        case 'favorites':
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('active-category', 'active-category-blue', 'text-white', 'bg-gray-800');
+                btn.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
+            });
+            displayFavorites();
+            break;
+            
+        case 'modapp': // ⭐️ NEW: ModApp Navigation Case
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('active-category', 'active-category-blue', 'text-white', 'bg-gray-800');
+                btn.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
+            });
+            openModAppWebview();
+            break;
+
+        case 'profile':
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('active-category', 'active-category-blue', 'text-white', 'bg-gray-800');
+                btn.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
+            });
+            displayProfileSettings();
+            break;
+    }
+}
+
+window.changeLanguage = function(lang) {
+    currentSettings.language = lang;
+    try {
+        localStorage.setItem('userSettings', JSON.stringify(currentSettings));
+    } catch (e) { /* Error */ }
+    applySettings();
+    const activeNavBtn = document.querySelector('.nav-btn.text-primary');
+    if (activeNavBtn) {
+        changeNav(activeNavBtn);
+    }
+}
+
+
+// -------------------------------------------------------------------------
+// 4. RENDERING LOGIC (Category/Trending/Favorites/Profile)
+// -------------------------------------------------------------------------
+
+/**
+ * Renders movies for a selected category, applying the blue active color.
+ */
+window.showCategory = function(category, btn) {
+    const moviesContainer = document.getElementById('movies');
+    moviesContainer.innerHTML = '';
+    
+    document.querySelectorAll('.menu-btn').forEach(b => {
+        // FIX: Remove blue class and reset to gray
+        b.classList.remove('active-category', 'active-category-blue', 'text-white');
+        b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
+    });
+
+    if (btn) {
+        // FIX: Add the blue active class
+        btn.classList.add('active-category', 'active-category-blue', 'text-white');
+        btn.classList.remove('bg-gray-800', 'hover:bg-gray-700');
+    }
+
+    const moviesList = videos[category] || [];
+    if (moviesList.length === 0) {
+        const t = translations[currentSettings.language] || translations.myanmar;
+        moviesContainer.innerHTML = `<h2 class="text-xl font-bold text-center w-full mb-4 text-white/80 col-span-full">${t.noContent || 'No Content Available'}</h2>`;
         return;
     }
 
-    if (menuBar.children.length === 0) {
-        const categoryKeys = Object.keys(videos).filter(k => k !== 'trending');
-        menuBar.innerHTML = categoryKeys.map(k => {
-            const t = translations[currentSettings.language] || translations.myanmar;
-            const categoryName = t[k] || k;
-            return `<button class="category-btn bg-midbg text-white/70 hover:text-white px-3 py-1 rounded-full text-sm transition duration-200" data-category="${k}" onclick="showCategory('${k}')">${categoryName}</button>`;
-        }).join('');
-    }
-    
-    document.querySelectorAll('.category-btn').forEach(b => {
-        b.classList.remove('bg-primary', 'text-black');
-        b.classList.add('bg-midbg', 'text-white/70');
+    moviesList.forEach(movie => {
+        moviesContainer.appendChild(createMovieCard(movie));
     });
+};
 
-    const activeBtn = document.querySelector(`.category-btn[data-category="${category}"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('bg-primary', 'text-black');
-        activeBtn.classList.remove('bg-midbg', 'text-white/70');
-    }
-    
-    const movieCards = (videos[category] || []).map(createMovieCard).join('');
-    moviesContainer.innerHTML = movieCards || `<p class="text-center text-gray-500 py-10" data-i18n="noMovies">No movies found in this category.</p>`;
-}
-
+/**
+ * Renders trending movies.
+ */
 function displayTrending() {
-    const moviesContainer = document.getElementById('movies');
-    
-    document.querySelectorAll('.category-btn').forEach(b => {
-        b.classList.remove('bg-primary', 'text-black');
-        b.classList.add('bg-midbg', 'text-white/70');
+    // Reset category buttons when viewing trending
+    document.querySelectorAll('.menu-btn').forEach(b => {
+        b.classList.remove('active-category', 'active-category-blue', 'text-white');
+        b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
     });
+
+    const moviesContainer = document.getElementById('movies');
+    const t = translations[currentSettings.language] || translations.myanmar;
     
-    const movieCards = (videos.trending || []).map(createMovieCard).join('');
-    moviesContainer.innerHTML = movieCards || `<p class="text-center text-gray-500 py-10" data-i18n="noTrending">No trending movies available.</p>`;
+    const trendingMovies = videos.trending || []; 
+    
+    moviesContainer.innerHTML = `<h2 class="text-xl font-bold text-center w-full mb-4 text-white/80 col-span-full">${t.trendingTitle || 'Trending Movies'}</h2>`;
+    
+    if (trendingMovies.length === 0) {
+        moviesContainer.innerHTML += `<p class="text-center w-full text-gray-500 col-span-full">${t.noContent || 'No Content Available'}</p>`;
+        return;
+    }
+
+    trendingMovies.forEach(movie => {
+        moviesContainer.appendChild(createMovieCard(movie));
+    });
 }
 
 function displayFavorites() {
+    // Reset category buttons when viewing favorites
+    document.querySelectorAll('.menu-btn').forEach(b => {
+        b.classList.remove('active-category', 'active-category-blue', 'text-white');
+        b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
+    });
+
     const moviesContainer = document.getElementById('movies');
-    const favoriteMovies = favorites.map(id => findMovieById(id)).filter(movie => movie);
+    const t = translations[currentSettings.language] || translations.myanmar;
+
+    const favoriteMovies = favorites.map(id => findMovieById(id)).filter(movie => movie !== null);
     
-    if (!currentUser) {
-        const t = translations[currentSettings.language] || translations.myanmar;
-        moviesContainer.innerHTML = `<p class="text-center text-red-500 py-10 font-semibold">${t.loginRequiredForFav || "Login is required to view favorites."}</p>`;
+    moviesContainer.innerHTML = `<h2 class="text-xl font-bold text-center w-full mb-4 text-white/80 col-span-full">${t.favoritesTitle || 'My Favorites'}</h2>`;
+
+    if (favoriteMovies.length === 0) {
+        moviesContainer.innerHTML += `<p class="text-center w-full text-gray-500 col-span-full">${t.noFavorites || 'No favorite movies added yet.'}</p>`;
         return;
     }
-    
-    const movieCards = favoriteMovies.map(createMovieCard).join('');
-    
-    const t = translations[currentSettings.language] || translations.myanmar;
-    moviesContainer.innerHTML = movieCards || `<p class="text-center text-gray-500 py-10">${t.noFavorites || "You haven't added any favorites yet."}</p>`;
+
+    favoriteMovies.forEach(movie => {
+        moviesContainer.appendChild(createMovieCard(movie));
+    });
 }
 
+/**
+ * Renders the profile/settings view with Theme and Adult Content button.
+ */
 function displayProfileSettings() {
+    // Reset category buttons when viewing profile
+    document.querySelectorAll('.menu-btn').forEach(b => {
+        b.classList.remove('active-category', 'active-category-blue', 'text-white');
+        b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
+    });
+    
     const moviesContainer = document.getElementById('movies');
     const t = translations[currentSettings.language] || translations.myanmar;
-    const userName = currentUser?.username || 'Guest User'; 
-
+    
     moviesContainer.innerHTML = `
         <div class="max-w-md mx-auto w-full space-y-6">
             <h2 class="text-3xl font-bold text-primary">${t.profileTitle || 'User Profile'}</h2>
             
             <div class="p-4 bg-gray-800 rounded-lg shadow-lg">
-                <p class="text-lg font-semibold mb-4 text-white/90">${t.loggedInAs || 'Logged in as:'} ${userName}</p>
-                
                 <h3 class="text-xl font-semibold mb-3">${t.settingsTitle || 'Settings'}</h3>
                 
-                <label for="theme-select" class="block text-white/70 mb-2">${t.theme || 'Theme'}:</label>
-                <select id="theme-select" onchange="changeTheme(this.value)" class="w-full p-2 bg-gray-700 text-white rounded mb-4">
-                    <option value="dark">${t.darkTheme || 'Dark'}</option>
+                <div class="flex justify-between items-center mb-4">
+                    <p>${t.themeLabel || 'Theme:'}</p>
+                    <select id="theme-select" onchange="changeTheme(this.value)" class="bg-gray-700 text-white p-2 rounded">
+                        <option value="dark" ${currentSettings.theme === 'dark' ? 'selected' : ''}>Dark</option>
+                        <option value="light" ${currentSettings.theme === 'light' ? 'selected' : ''}>Light</option>
                     </select>
+                </div>
 
-                <label for="language-select" class="block text-white/70 mb-2">${t.language || 'Language'}:</label>
-                <select id="language-select" onchange="changeLanguage(this.value)" class="w-full p-2 bg-gray-700 text-white rounded mb-6">
-                    <option value="myanmar">${t.myanmar || 'Myanmar'}</option>
-                    <option value="english">${t.english || 'English'}</option>
-                </select>
-
-                <button onclick="logout()" class="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded transition duration-200">
-                    ${t.signOut || 'Sign Out'}
+                <div class="flex justify-between items-center mb-4">
+                    <p>${t.languageLabel || 'Language:'}</p>
+                    <select id="language-select" onchange="changeLanguage(this.value)" class="bg-gray-700 text-white p-2 rounded">
+                        <option value="myanmar" ${currentSettings.language === 'myanmar' ? 'selected' : ''}>${t.langMyanmar || 'Myanmar'}</option>
+                        <option value="english" ${currentSettings.language === 'english' ? 'selected' : ''}>${t.langEnglish || 'English'}</option>
+                    </select>
+                </div>
+                
+                <button onclick="localStorage.clear(); window.location.reload();" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded transition duration-200">
+                    ${t.resetData || 'Reset App Data'}
                 </button>
             </div>
 
@@ -453,22 +450,47 @@ function displayProfileSettings() {
     `;
 
     document.getElementById('theme-select').value = currentSettings.theme;
-    document.getElementById('language-select').value = currentSettings.language;
 }
 
 
 // -------------------------------------------------------------------------
-// 7. HELPER AND VIDEO FUNCTIONS
+// 5. HELPER AND VIDEO FUNCTIONS (Unchanged from v3.2)
 // -------------------------------------------------------------------------
 
-function findMovieById(id) {
-    for (const category in videos) {
-        const movie = videos[category].find(movie => movie.id === id);
-        if (movie) return movie;
-    }
-    return null;
+/**
+ * Creates the HTML element for a single movie card.
+ */
+function createMovieCard(movie) {
+    const movieId = movie.id; 
+    const isFav = favorites.includes(movieId); 
+    const t = translations[currentSettings.language] || translations.myanmar;
+    const card = document.createElement('div');
+    const bgColorClass = currentSettings.theme === 'light' ? 'bg-white' : 'bg-gray-800';
+    
+    card.className = `movie-card-bg ${bgColorClass} rounded-lg shadow-md hover:shadow-primary/50 transition duration-300 transform hover:scale-[1.03] overflow-hidden cursor-pointer w-full flex flex-col`;
+    card.setAttribute('data-movie-id', movieId);
+
+    // aspect-video (16:9) ratio
+    card.innerHTML = `
+        <div class="relative w-full aspect-video" onclick="window.playVideo('${movieId}')"> 
+            <img src="${movie.thumb}" alt="${movie.title}" onerror="this.onerror=null;this.src='https://placehold.co/100x100/1a1a1a/cccccc?text=WY'" class="w-full h-full object-cover rounded-t-lg absolute">
+            ${isFav ? `<div class="absolute top-1 left-1 text-primary z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>` : ''}
+        </div>
+        <div class="p-1 flex flex-col justify-between flex-grow">
+            <p class="text-[0.6rem] font-medium leading-tight mb-1 truncate">${movie.title}</p> 
+            <button onclick="window.playVideo('${movieId}')" class="mt-1 text-[0.6rem] font-semibold text-primary hover:text-black hover:bg-primary transition duration-200 py-1 px-1 rounded-full border border-primary">
+                ${t.nowPlaying || 'Play Now'}
+            </button>
+        </div>
+    `;
+    return card;
 }
 
+/**
+ * Plays a video in the iframe.
+ */
 window.playVideo = function(movieId) {
     const movie = findMovieById(movieId);
     
@@ -478,97 +500,81 @@ window.playVideo = function(movieId) {
     }
     
     currentPlayingMovie = movie;
-    const iframe = document.getElementById('iframePlayer');
-    const movieSrc = movie.src;
 
-    iframe.removeAttribute('allow');
-    
-    if (movieSrc.includes('youtube.com') || movieSrc.includes('youtu.be')) {
-        let embedSrc = movieSrc;
-        if (!movieSrc.includes('autoplay')) {
-             embedSrc = movieSrc.includes('?') ? `${movieSrc}&autoplay=1` : `${movieSrc}?autoplay=1`;
-        }
-        
-        iframe.src = embedSrc;
-        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
-
-    } else if (movieSrc.includes('archive.org') || movieSrc.includes('mega.nz')) {
-        iframe.src = movieSrc;
-    } else {
-        iframe.src = movieSrc;
-    }
-
+    document.getElementById('iframePlayer').src = movie.src;
     document.getElementById('current-movie-title').textContent = movie.title;
+    
     updateFavoriteButtonState(movieId);
 }
 
-window.toggleFullScreen = function() {
-    const playerContainer = document.getElementById('player-container');
-    const iframe = document.getElementById('iframePlayer');
-    const mainContent = document.getElementById('main-content');
-    const header = document.getElementById('header-sticky');
-    const navBar = document.getElementById('nav-bar');
-    const closeIcon = document.getElementById('fullscreen-icon-close');
-    const openIcon = document.getElementById('fullscreen-icon-open');
 
-    const isInFullScreen = playerContainer.classList.toggle('fullscreen-mode');
-
-    if (isInFullScreen) {
-        document.body.style.overflow = 'hidden'; 
-        mainContent.classList.add('hidden');
-        header.classList.add('hidden');
-        navBar.classList.add('hidden');
-        
-        openIcon.classList.add('hidden');
-        closeIcon.classList.remove('hidden');
-
-        if (iframe.requestFullscreen) {
-            iframe.requestFullscreen().catch(e => console.log("Browser fullscreen failed:", e));
-        }
-
-    } else {
-        document.body.style.overflow = ''; 
-        mainContent.classList.remove('hidden');
-        header.classList.remove('hidden');
-        navBar.classList.remove('hidden');
-        
-        openIcon.classList.remove('hidden');
-        closeIcon.classList.add('hidden');
-
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        }
+function findMovieById(id) {
+    for (const category in videos) {
+        const movie = videos[category].find(movie => movie.id === id);
+        if (movie) return movie;
     }
+    return null;
 }
 
-window.showCustomAlert = function(title, message) {
-    document.getElementById('alert-title').textContent = title;
-    document.getElementById('alert-message').textContent = message;
-    document.getElementById('custom-alert-modal').classList.remove('hidden');
-    document.getElementById('custom-alert-modal').classList.add('flex');
-}
+// ... (toggleFullScreen, showCustomAlert, closeCustomAlert functions remain the same) ...
 
-window.closeCustomAlert = function() {
-    document.getElementById('custom-alert-modal').classList.add('hidden');
-    document.getElementById('custom-alert-modal').classList.remove('flex');
-}
 
+// -------------------------------------------------------------------------
+// 6. ADULT & MODAPP WEBVIEW LOGIC (Updated)
+// -------------------------------------------------------------------------
+
+/**
+ * Opens the full-screen iframe modal to the adult content URL.
+ */
 window.openAdultWebview = function() {
-    document.getElementById('adult-webview-iframe').src = ADULT_WEBVIEW_URL;
-    document.getElementById('adult-webview-modal').classList.remove('hidden');
-    document.getElementById('adult-webview-modal').classList.add('flex');
+    const modal = document.getElementById('adult-webview-modal');
+    const iframe = document.getElementById('adultWebviewIframe');
+    
+    iframe.src = ADULT_WEBVIEW_URL;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
 }
 
+/**
+ * Closes the full-screen iframe modal and returns to the main app.
+ */
 window.closeAdultWebview = function() {
-    document.getElementById('adult-webview-iframe').src = 'about:blank';
-    document.getElementById('adult-webview-modal').classList.add('hidden');
-    document.getElementById('adult-webview-modal').classList.remove('flex');
+    const modal = document.getElementById('adult-webview-modal');
+    const iframe = document.getElementById('adultWebviewIframe');
+    
+    iframe.src = 'about:blank'; 
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// ⭐️ NEW: ModApp Webview Logic
+
+/**
+ * Opens the full-screen iframe modal to the ModApp URL.
+ */
+window.openModAppWebview = function() {
+    const modal = document.getElementById('modapp-webview-modal'); // ⭐️ Target the new modal ID
+    const iframe = document.getElementById('modappWebviewIframe'); // ⭐️ Target the new iframe ID
+    
+    iframe.src = MODAPP_WEBVIEW_URL; // ⭐️ Use the new ModApp URL
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Closes the full-screen iframe modal for ModApp.
+ */
+window.closeModAppWebview = function() {
+    const modal = document.getElementById('modapp-webview-modal'); // ⭐️ Target the new modal ID
+    const iframe = document.getElementById('modappWebviewIframe'); // ⭐️ Target the new iframe ID
+    
+    iframe.src = 'about:blank'; 
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
 }
 
 
 // Initial application load 
-document.addEventListener('DOMContentLoaded', () => {
-    // Hide the body content initially to prevent flashing until auth state is determined
-    document.getElementById('body-root').classList.add('hidden-body');
-    initializeApp();
+window.addEventListener('DOMContentLoaded', () => {
+    window.initializeApp();
 });

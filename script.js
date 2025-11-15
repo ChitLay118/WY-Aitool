@@ -1,9 +1,7 @@
 /**
- * WY MovieBox - Main JavaScript Logic (v3.4 - Added ModApp Nav & Webview)
+ * WY MovieBox - Main JavaScript Logic (v3.4 - ModApp opens in External Browser)
  * * Key features:
- * - **No External Search/DB:** Only uses JSON data.
- * - **Player Sticky:** Player remains on top of the screen when scrolling.
- * - **Menu Blue:** Active category button shows blue background.
+ * - **ModApp External Open:** ModApp navigation button opens the URL directly in the phone's default browser.
  */
 
 // Global state variables
@@ -19,16 +17,13 @@ const defaultSettings = {
 };
 
 const ADULT_WEBVIEW_URL = 'https://allkar.vercel.app/';
-const MODAPP_WEBVIEW_URL = 'https://wyap-pstore.vercel.app/'; // ⭐️ NEW: ModApp URL
+const MODAPP_WEBVIEW_URL = 'https://wyap-pstore.vercel.app/'; 
 
 
 // -------------------------------------------------------------------------
 // 1. DATA FETCHING AND INITIALIZATION
 // -------------------------------------------------------------------------
 
-/**
- * Fetches movie data and translations from the JSON file.
- */
 async function loadDataFromJSON() {
     try {
         const response = await fetch('videos_photos.json');
@@ -46,9 +41,6 @@ async function loadDataFromJSON() {
     }
 }
 
-/**
- * Generates unique video IDs for all movies after loading data.
- */
 function generateVideoIds() {
     let idCounter = 1;
     for (const category in videos) {
@@ -61,9 +53,6 @@ function generateVideoIds() {
     }
 }
 
-/**
- * Enables all navigation and category buttons after the app is initialized.
- */
 function enableButtons() {
     const navBar = document.getElementById('nav-bar');
     const menuBar = document.getElementById('menu-bar');
@@ -77,15 +66,11 @@ function enableButtons() {
     menuBar.classList.remove('pointer-events-none', 'opacity-50');
 }
 
-
-/**
- * Loads user state and initializes the app.
- */
 window.initializeApp = async function() {
     
     // 1. Load Data
     await loadDataFromJSON(); 
-    generateVideoIds(); // IDs are generated after load
+    generateVideoIds(); 
 
     // 2. Load Local State (Settings/Favorites)
     const storedSettings = localStorage.getItem('userSettings');
@@ -120,7 +105,7 @@ window.initializeApp = async function() {
 
 
 // -------------------------------------------------------------------------
-// 2. LOCAL STORAGE AND FAVORITES HANDLING (Unchanged)
+// 2. LOCAL STORAGE AND FAVORITES HANDLING
 // -------------------------------------------------------------------------
 
 function saveFavorites() {
@@ -168,9 +153,6 @@ function updateFavoriteButtonState(movieId) {
 // 3. UI AND VIEW MANAGEMENT (Navigation Logic)
 // -------------------------------------------------------------------------
 
-/**
- * Applies language and theme settings.
- */
 function applySettings() {
     const lang = currentSettings.language;
     const body = document.getElementById('body-root');
@@ -197,9 +179,6 @@ function applySettings() {
     });
 }
 
-/**
- * Saves and changes the application theme.
- */
 window.changeTheme = function(theme) {
     currentSettings.theme = theme;
     try {
@@ -213,7 +192,6 @@ window.changeTheme = function(theme) {
         changeNav(activeNavBtn);
     }
 }
-
 
 window.changeNav = function(btn) {
     const nav = btn.dataset.nav;
@@ -237,7 +215,7 @@ window.changeNav = function(btn) {
     moviesContainer.innerHTML = '';
     
     // Header/Player visibility and Layout Control
-    if (nav === 'profile' || nav === 'modapp') { // ⭐️ UPDATED: include 'modapp'
+    if (nav === 'profile' || nav === 'modapp') { // Modapp will trigger layout change 
         menuBar.classList.add('hidden');
         playerContainer.classList.add('hidden');
         if (currentTitleBar) currentTitleBar.classList.add('hidden'); 
@@ -284,13 +262,22 @@ window.changeNav = function(btn) {
             displayFavorites();
             break;
             
-        case 'modapp': // ⭐️ NEW: ModApp Navigation Case
+        case 'modapp': 
             document.querySelectorAll('.menu-btn').forEach(btn => {
                 btn.classList.remove('active-category', 'active-category-blue', 'text-white', 'bg-gray-800');
                 btn.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
             });
-            openModAppWebview();
+            
+            // ⭐️ Browser တွင် တိုက်ရိုက်ဖွင့်ခြင်း
+            window.open(MODAPP_WEBVIEW_URL, '_blank'); 
+            
+            // ဖွင့်ပြီးပါက Home သို့ ချက်ချင်းပြန်လှည့်ခြင်း
+            const homeBtn = document.querySelector('.nav-btn[data-nav="home"]');
+            if (homeBtn) {
+                 changeNav(homeBtn);
+            }
             break;
+
 
         case 'profile':
             document.querySelectorAll('.menu-btn').forEach(btn => {
@@ -319,21 +306,16 @@ window.changeLanguage = function(lang) {
 // 4. RENDERING LOGIC (Category/Trending/Favorites/Profile)
 // -------------------------------------------------------------------------
 
-/**
- * Renders movies for a selected category, applying the blue active color.
- */
 window.showCategory = function(category, btn) {
     const moviesContainer = document.getElementById('movies');
     moviesContainer.innerHTML = '';
     
     document.querySelectorAll('.menu-btn').forEach(b => {
-        // FIX: Remove blue class and reset to gray
         b.classList.remove('active-category', 'active-category-blue', 'text-white');
         b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
     });
 
     if (btn) {
-        // FIX: Add the blue active class
         btn.classList.add('active-category', 'active-category-blue', 'text-white');
         btn.classList.remove('bg-gray-800', 'hover:bg-gray-700');
     }
@@ -350,11 +332,7 @@ window.showCategory = function(category, btn) {
     });
 };
 
-/**
- * Renders trending movies.
- */
 function displayTrending() {
-    // Reset category buttons when viewing trending
     document.querySelectorAll('.menu-btn').forEach(b => {
         b.classList.remove('active-category', 'active-category-blue', 'text-white');
         b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
@@ -378,7 +356,6 @@ function displayTrending() {
 }
 
 function displayFavorites() {
-    // Reset category buttons when viewing favorites
     document.querySelectorAll('.menu-btn').forEach(b => {
         b.classList.remove('active-category', 'active-category-blue', 'text-white');
         b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
@@ -401,11 +378,7 @@ function displayFavorites() {
     });
 }
 
-/**
- * Renders the profile/settings view with Theme and Adult Content button.
- */
 function displayProfileSettings() {
-    // Reset category buttons when viewing profile
     document.querySelectorAll('.menu-btn').forEach(b => {
         b.classList.remove('active-category', 'active-category-blue', 'text-white');
         b.classList.add('bg-gray-800', 'text-white', 'hover:bg-gray-700');
@@ -454,12 +427,9 @@ function displayProfileSettings() {
 
 
 // -------------------------------------------------------------------------
-// 5. HELPER AND VIDEO FUNCTIONS (Unchanged from v3.2)
+// 5. HELPER AND VIDEO FUNCTIONS
 // -------------------------------------------------------------------------
 
-/**
- * Creates the HTML element for a single movie card.
- */
 function createMovieCard(movie) {
     const movieId = movie.id; 
     const isFav = favorites.includes(movieId); 
@@ -488,9 +458,6 @@ function createMovieCard(movie) {
     return card;
 }
 
-/**
- * Plays a video in the iframe.
- */
 window.playVideo = function(movieId) {
     const movie = findMovieById(movieId);
     
@@ -516,16 +483,37 @@ function findMovieById(id) {
     return null;
 }
 
-// ... (toggleFullScreen, showCustomAlert, closeCustomAlert functions remain the same) ...
+function toggleFullScreen() {
+    const playerContainer = document.getElementById('player-container');
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        playerContainer.requestFullscreen().catch(err => {
+            console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+    }
+}
+
+let alertTimeout;
+window.showCustomAlert = function(title, message) {
+    const modal = document.getElementById('custom-alert-modal');
+    document.getElementById('alert-title').textContent = title;
+    document.getElementById('alert-message').textContent = message;
+    modal.classList.remove('hidden');
+    clearTimeout(alertTimeout);
+    alertTimeout = setTimeout(closeCustomAlert, 5000); // Auto close after 5 seconds
+}
+
+window.closeCustomAlert = function() {
+    document.getElementById('custom-alert-modal').classList.add('hidden');
+    clearTimeout(alertTimeout);
+}
 
 
 // -------------------------------------------------------------------------
-// 6. ADULT & MODAPP WEBVIEW LOGIC (Updated)
+// 6. ADULT WEBVIEW LOGIC (ModApp logic is now in changeNav)
 // -------------------------------------------------------------------------
 
-/**
- * Opens the full-screen iframe modal to the adult content URL.
- */
 window.openAdultWebview = function() {
     const modal = document.getElementById('adult-webview-modal');
     const iframe = document.getElementById('adultWebviewIframe');
@@ -535,38 +523,9 @@ window.openAdultWebview = function() {
     document.body.style.overflow = 'hidden';
 }
 
-/**
- * Closes the full-screen iframe modal and returns to the main app.
- */
 window.closeAdultWebview = function() {
     const modal = document.getElementById('adult-webview-modal');
     const iframe = document.getElementById('adultWebviewIframe');
-    
-    iframe.src = 'about:blank'; 
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-}
-
-// ⭐️ NEW: ModApp Webview Logic
-
-/**
- * Opens the full-screen iframe modal to the ModApp URL.
- */
-window.openModAppWebview = function() {
-    const modal = document.getElementById('modapp-webview-modal'); // ⭐️ Target the new modal ID
-    const iframe = document.getElementById('modappWebviewIframe'); // ⭐️ Target the new iframe ID
-    
-    iframe.src = MODAPP_WEBVIEW_URL; // ⭐️ Use the new ModApp URL
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-/**
- * Closes the full-screen iframe modal for ModApp.
- */
-window.closeModAppWebview = function() {
-    const modal = document.getElementById('modapp-webview-modal'); // ⭐️ Target the new modal ID
-    const iframe = document.getElementById('modappWebviewIframe'); // ⭐️ Target the new iframe ID
     
     iframe.src = 'about:blank'; 
     modal.classList.add('hidden');
